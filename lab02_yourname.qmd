@@ -1,0 +1,220 @@
+---
+title: "Linear Regression"
+subtitle: "Stat 243: Lab 2"
+author: "Insert Your Name Here"
+format: pdf
+editor: source
+---
+
+## Due: Friday, Sep 25th, 11am PT.
+
+## Instructions
+
+Problem sets are a (nearly) weekly opportunity to engage with ideas relevant to content taught so far in the course. As your are working through your problem set, make sure to "Render" the document early and often. Take a look at the PDF output, as this is what you will turn in on Gradescope. Make sure the output is fully readable and is something that you are proud of. Take care to make sure code, writing, and headers are formatted neatly and presentably. 
+
+## Collaborators
+
+I collaborated with... (list names of collaborators here).
+
+
+## Goals of this problem set
+
+* Recall some exploratory data analysis skills
+* Practice applying linear regression in R
+* Interpret linear regression coefficients
+
+
+**You are not allowed to use any generative AI models (like ChatGPT) on your problem set.**
+
+**The Honor Principle must guide your work on this problem set.**
+
+
+## Problem 0: Load packages
+
+Load any relevant packages needed for this problem set. I added a few for you.
+
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(gglm)
+```
+
+
+
+
+# Part 1: Linear regression with real data
+
+For Part 1 of this homework assignment, you will practice linear regression on a subset of data from the `moderndive` package on books sold on Amazon. The original dataset was collected via a random sample of 325 books from Amazon.com; we have further subsetted the data to only include books with a price less than $30 on the website. Run the following code to load in the dataset, `books_subset`.
+
+```{r}
+data("amazon_books")
+books_subset <- amazon_books %>% filter(list_price < 30)
+```
+
+Each row represents a book; each column is a variable to describe the book. We will focus on the variables `amazon_price` (list price on Amazon in US dollars), `weight_oz` (weight of the book in ounces), and `hard_paper` (a categorical variable indicating if the book is a paperback [P] or hardcover [H]). Run the following code to display a help page providing more information on each variable.
+
+```{r}
+#| eval: false
+?amazon_books
+```
+
+## Problem 1: Exploratory Data Analysis
+
+a.  For each of the three variables listed above, create an appropriate `ggplot` displaying the distribution of the variable.
+
+b.  For each pair of variables listed above, create an appropriate `ggplot` displaying both variables together.
+
+c.  Create a single `ggplot` showing all three variables together.
+
+d.  In 3-4 sentences, describe any evident trends you observe about the data from your exploratory plots.
+
+
+
+
+## Problem 2: A First Regression Model
+
+The following code chunk create a simple linear regression model for `amazon_price` using `weight_oz` as a predictor, and then prints out the corresponding regression table.
+
+```{r}
+model1 <- lm(amazon_price~weight_oz, data=books_subset)
+get_regression_table(model1)
+```
+
+a.  Is this model parametric or nonparametric?
+
+b.  Is predicting `amazon_price` from `weight_oz` a supervised, or unsupervised learning problem? 
+
+c.  Is predicting `amazon_price` from `weight_oz` a regression, or classification problem?
+
+
+
+## Problem 3: Coefficient Interpretation in Simple Linear Regression
+
+a.  Carefully interpret the intercept coefficient from `model1` in Problem 2, in context.
+
+b.  Carefully interpret the slope coefficient for `weight_oz` from `model1` in Problem 2, in context.
+
+
+
+
+## Problem 4: Assessing Regression Assumptions in Simple Linear Regression
+
+Use the techniques from class to create plots to assess the LINE assumptions. Then, use the plots to carefully assess each of the LINE conditions, and discuss your assessment. Remember that (1) we cannot expect "perfection" when assessing conditions and (2) it is okay to express uncertainty in the conditions being met; you need not make absolute claims.
+
+
+
+
+## Problem 5: Multiple Linear Regression
+
+a.  Write code to fit a linear regression model predicting `amazon_price` using `weight_oz` and `hard_paper`, and save the model as an object called `model2`. Then, display the corresponding regression table.
+
+b.  Carefully interpret the intercept coefficient from `model2`, in context.
+
+c.  Carefully interpret the slope coefficient for `weight_oz` from `model2`, in context.
+
+d.  Carefully interpret the slope coefficient for `hard_paper: H` from `model2`, in context.
+
+
+
+## Problem 6: LINE Assumptions for MLR
+
+a.  Using the code we learned in class, create plots to assess the LINE conditions of `model2`.
+
+b.  Carefully assess each of the LINE conditions for `model2`.
+
+c.  Based on your answer to part (b), would you be willing to conduct theory-based inference for the coefficients in `model2`? Explain why or why not.
+
+
+
+## Problem 7: Takeaways
+
+a.  Imagine you're a book publisher that needs to assign a price to a new *hardcover* book that weighs *10 ounces*. Use `model2` to predict the new book's price on Amazon.
+
+b.  Considering your answers to Problems 5 and 6, do you feel your prediction from part (a) is *precise* or *imprecise*? Explain.
+
+c.  If you were to expand `model2`, which sorts of variables would you want to add? (The variables you list need not be included in the `books_subset` dataset.)
+
+
+
+# Part 2: Linear regression with simulated data 
+
+As discussed in class on Monday and Wednesday of Week 3, it is the case that when LINE conditions are not met, we no longer can conduct valid inference. This propagates in two ways: 
+
+1. Our estimates of our $\beta$'s, and
+2. Our estimates of our $\mbox{SE}(\hat\beta)$'s. 
+
+
+## Problem 1: A valid model
+
+We can see our estimates of our $\beta$'s and $\mbox{SE}(\hat\beta)$'s start to deteriorate by simulating data that does not adhere to the LINE conditions. But first, let's simulate data that does not violate LINE conditions:
+
+```{r}
+# Simulate data from a linear model
+set.seed(794)
+n <- 80
+x <- runif(n)
+beta_1 <- 3.5
+sigma <- .6
+y <- beta_1 * x + rnorm(n, sd = sigma)
+df <- data.frame(x, y)
+m1 <- lm(y ~ x, data = df)
+
+# plot the linear model
+ggplot(df, aes(x = x, y = y)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE)
+
+# diagnose the linear model
+gglm(m1)
+```
+
+
+a.  How many observations are in our (simulated) sample?
+
+b.  Based on the code above, write down the equation for the **true population** model. Make sure to include numeric values for $\beta_0$, $\beta_1$, and $\sigma$.
+
+
+Now, we will assess how well we have estimated $\beta_1$ and $\mbox{SE}(\hat\beta_1)$ via simulation. The code below generates 5000 samples of size $n$, fits a linear model to each of the samples individually, and for each sample, stores the estimate of $\beta_1$ and builds a 95% confidence interval. Our estimated $\beta$'s are stored in the vector `beta_hats`. Further, a value of `TRUE` is stored in `capture` for each sample that creates a confidence interval that contains the true parameter for $\beta_1$, and `FALSE` otherwise. 
+
+
+```{r}
+it <- 5000
+beta_hats <- rep(NA, it)
+capture <- rep(FALSE, it)
+for(i in 1:it) {
+  y <- beta_1 * x + rnorm(n, sd = sigma)
+  m <- lm(y ~ x)
+  beta_hats[i] <- m$coef[2]
+  ci <- confint(m)[2, ]
+  capture[i] <- (ci[1] < beta_1 & beta_1 < ci[2])
+}
+```
+
+
+c.  Add comments to the code above, explaining what each line does. If you're not sure what a particular line does, it can be quite helpful to run the code line-by-line and inspect the output or resulting objects.
+
+d.  Given that we have met the LINE conditions, how many `TRUE`s and how many `FALSE`'s do you expect to be in `capture` after running the code above? 
+
+e.  Run the following code. Explain how one line corresponds to assessing if we have bias in the estimation of $\hat\beta_1$ and the other corresponds to assessing if we have bias in the estimation of $\mbox{SE}(\hat\beta_1)$. 
+
+```{r}
+mean(beta_hats) - beta_1
+mean(capture)
+```
+
+
+f.  Based on the results of our simulation, do we have bias in estimating $\beta_1$ or $\mbox{SE}(\hat\beta_1)$? 
+
+
+## Problem 2: Let's break something
+
+In class, we looked at what happened when our errors no longer had equal variability. Now, it's your turn. Simulate data from a linear model that has broken one of the other LINE conditions and assess what goes wrong. Make sure to specify what condition you are breaking, and to discuss what does (and doesn't) go wrong.  
+
+
+
+
+
+
+
+
